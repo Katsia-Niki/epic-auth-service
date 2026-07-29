@@ -1,0 +1,7 @@
+target/*
+!target/epic-user-service-*.jar
+.git/
+.idea/
+*.iml
+.env
+.env.*
