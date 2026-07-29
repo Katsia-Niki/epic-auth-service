@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: epic-postgres
+    container_name: epic-auth-postgres
     environment:
-      POSTGRES_DB: epic_auth_service
+      POSTGRES_DB: epic-auth-service
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d epic_auth_service"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d epic-auth-service"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -1,5 +1,5 @@
 target/*
-!target/epic-user-service-*.jar
+!target/epic-auth-service-*.jar
 .git/
 .idea/
 *.iml
