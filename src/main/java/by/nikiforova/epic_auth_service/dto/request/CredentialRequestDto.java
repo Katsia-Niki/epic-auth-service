@@ -8,4 +8,6 @@ import jakarta.validation.constraints.Size;
 public record CredentialRequestDto(@NotNull Long userId,
                                    @NotBlank String login,
                                    @NotBlank @Size(min = 8) String password,
-                                   @NotNull Role role) {}
+                                   @NotNull Role role) {
+
+}
