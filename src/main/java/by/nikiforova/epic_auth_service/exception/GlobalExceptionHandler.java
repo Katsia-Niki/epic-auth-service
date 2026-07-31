@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
                 InvalidTokenException.class
     })
     public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(
-            InvalidCredentialsException e, HttpServletRequest request) {
+            RuntimeException e, HttpServletRequest request) {
         log.info(e.getMessage());
         ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now(ZoneId.of(TIMEZONE)),
