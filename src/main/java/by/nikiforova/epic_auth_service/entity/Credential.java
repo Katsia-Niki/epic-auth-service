@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.EnumType.ORDINAL;
 
 @Entity
 @Getter
@@ -28,6 +28,6 @@ public class Credential extends BaseEntity{
     private String passwordHash;
 
     @Column(name = "role")
-    @Enumerated(STRING)
+    @Enumerated(ORDINAL)
     private Role role;
 }

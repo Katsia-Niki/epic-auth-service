@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CredentialAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(
             CredentialAlreadyExistsException e, HttpServletRequest request) {
-        log.warn(e.getMessage());
+        log.info(e.getMessage());
         ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now(ZoneId.of(TIMEZONE)),
                 HttpStatus.CONFLICT.value(),
@@ -35,24 +35,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(InvalidCredentialsException.class)
+    @ExceptionHandler ({
+        InvalidCredentialsException.class,
+                InvalidTokenException.class
+    })
     public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(
             InvalidCredentialsException e, HttpServletRequest request) {
-        log.warn(e.getMessage());
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(ZoneId.of(TIMEZONE)),
-                HttpStatus.UNAUTHORIZED.value(),
-                e.getMessage(),
-                request.getRequestURI(),
-                null
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTokenException(
-            InvalidTokenException e, HttpServletRequest request) {
-        log.warn(e.getMessage());
+        log.info(e.getMessage());
         ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now(ZoneId.of(TIMEZONE)),
                 HttpStatus.UNAUTHORIZED.value(),
