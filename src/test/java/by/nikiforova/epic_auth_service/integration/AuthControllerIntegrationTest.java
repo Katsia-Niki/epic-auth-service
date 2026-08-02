@@ -1,7 +1,7 @@
 package by.nikiforova.epic_auth_service.integration;
 
-import by.nikiforova.epic_auth_service.dto.request.CredentialRequestDto;
 import by.nikiforova.epic_auth_service.dto.request.LoginRequestDto;
+import by.nikiforova.epic_auth_service.entity.Credential;
 import by.nikiforova.epic_auth_service.entity.Role;
 import by.nikiforova.epic_auth_service.repository.CredentialRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -20,9 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthControllerIntegrationTest {
-
-    private static final CredentialRequestDto CREDENTIAL_REQUEST =
-            new CredentialRequestDto(1L, "liza", "password123", Role.USER);
 
     private static final LoginRequestDto LOGIN_REQUEST =
             new LoginRequestDto("liza", "password123");
@@ -36,13 +34,20 @@ class AuthControllerIntegrationTest {
     @Autowired
     private CredentialRepository credentialRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         credentialRepository.deleteAll();
 
-        mockMvc.perform(post("/api/credentials")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(CREDENTIAL_REQUEST)));
+        Credential credential = Credential.builder()
+                .userId(1L)
+                .login("liza")
+                .passwordHash(passwordEncoder.encode("password123"))
+                .role(Role.USER)
+                .build();
+        credentialRepository.save(credential);
     }
 
     @Test

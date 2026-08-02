@@ -2,6 +2,7 @@ package by.nikiforova.epic_auth_service.controller;
 
 import by.nikiforova.epic_auth_service.dto.request.LoginRequestDto;
 import by.nikiforova.epic_auth_service.dto.request.TokenRequestDto;
+import by.nikiforova.epic_auth_service.dto.request.UserRegistrationRequestDto;
 import by.nikiforova.epic_auth_service.dto.response.JwtResponseDto;
 import by.nikiforova.epic_auth_service.dto.response.TokenValidateResponseDto;
 import by.nikiforova.epic_auth_service.service.AuthService;
@@ -19,6 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<JwtResponseDto> register (@Valid @RequestBody UserRegistrationRequestDto requestDto) {
+        JwtResponseDto jwtResponseDto = authService.register(requestDto);
+        return ResponseEntity.ok(jwtResponseDto);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDto> authenticate (@Valid @RequestBody LoginRequestDto loginRequestDto) {

@@ -1,11 +1,16 @@
 package by.nikiforova.epic_auth_service.service;
 
+import by.nikiforova.epic_auth_service.client.UserServiceClient;
 import by.nikiforova.epic_auth_service.dto.request.LoginRequestDto;
 import by.nikiforova.epic_auth_service.dto.request.TokenRequestDto;
+import by.nikiforova.epic_auth_service.dto.request.UserCreateRequestDto;
+import by.nikiforova.epic_auth_service.dto.request.UserRegistrationRequestDto;
 import by.nikiforova.epic_auth_service.dto.response.JwtResponseDto;
 import by.nikiforova.epic_auth_service.dto.response.TokenValidateResponseDto;
+import by.nikiforova.epic_auth_service.dto.response.UserResponseDto;
 import by.nikiforova.epic_auth_service.entity.Credential;
 import by.nikiforova.epic_auth_service.entity.Role;
+import by.nikiforova.epic_auth_service.exception.CredentialAlreadyExistsException;
 import by.nikiforova.epic_auth_service.exception.InvalidCredentialsException;
 import by.nikiforova.epic_auth_service.exception.InvalidTokenException;
 import by.nikiforova.epic_auth_service.repository.CredentialRepository;
@@ -19,12 +24,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -47,12 +55,17 @@ class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private UserServiceClient userServiceClient;
+
     @InjectMocks
     private AuthService authService;
 
     private LoginRequestDto loginRequestDto;
 
     private Credential credential;
+
+    private UserRegistrationRequestDto registrationRequestDto;
 
     @BeforeEach
     void setUp() {
@@ -63,6 +76,55 @@ class AuthServiceTest {
                 .passwordHash(PASSWORD_HASH)
                 .role(Role.USER)
                 .build();
+        registrationRequestDto = new UserRegistrationRequestDto(
+                "Liza",
+                "Ivanova",
+                "liza@gmail.com",
+                LocalDate.of(1995, Month.MAY, 10),
+                "liza",
+                "password123"
+        );
+    }
+
+    @Test
+    @DisplayName("register - success")
+    void registerWhenLoginIsUniqueShouldReturnTokens() {
+        UserResponseDto createdUser = new UserResponseDto(
+                1L,
+                "Liza",
+                "Ivanova",
+                "liza@gmail.com",
+                LocalDate.of(1995, Month.MAY, 10),
+                true,
+                null,
+                null
+        );
+
+        when(credentialRepository.existsByLogin("liza")).thenReturn(false);
+        when(userServiceClient.createUser(any(UserCreateRequestDto.class))).thenReturn(createdUser);
+        when(passwordEncoder.encode("password123")).thenReturn(PASSWORD_HASH);
+        when(jwtService.generateAccessToken(1L, Role.USER, "liza")).thenReturn(ACCESS_TOKEN);
+        when(jwtService.generateRefreshToken(1L, Role.USER, "liza")).thenReturn(REFRESH_TOKEN);
+
+        JwtResponseDto result = authService.register(registrationRequestDto);
+
+        assertEquals(ACCESS_TOKEN, result.accessToken());
+        assertEquals(REFRESH_TOKEN, result.refreshToken());
+
+        verify(userServiceClient).createUser(any(UserCreateRequestDto.class));
+        verify(credentialRepository).save(any(Credential.class));
+    }
+
+    @Test
+    @DisplayName("register - CredentialAlreadyExistsException")
+    void registerWhenLoginExistsShouldThrowException() {
+        when(credentialRepository.existsByLogin("liza")).thenReturn(true);
+
+        assertThrows(CredentialAlreadyExistsException.class,
+                () -> authService.register(registrationRequestDto));
+
+        verify(userServiceClient, never()).createUser(any());
+        verify(credentialRepository, never()).save(any());
     }
 
     @Test

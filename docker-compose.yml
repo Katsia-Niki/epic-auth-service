@@ -28,6 +28,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL}
       JWT_REFRESH_TTL: ${JWT_REFRESH_TTL}
+      USER_SERVICE_URL: ${USER_SERVICE_URL}
     depends_on:
       postgres:
         condition: service_healthy
