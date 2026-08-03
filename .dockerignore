@@ -1,0 +1,7 @@
+target/*
+!target/epic-auth-service-*.jar
+.git/
+.idea/
+*.iml
+.env
+.env.*
