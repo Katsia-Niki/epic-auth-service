@@ -1,13 +1,8 @@
 package by.nikiforova.epic_auth_service.service;
 
-import by.nikiforova.epic_auth_service.client.UserServiceClient;
-import by.nikiforova.epic_auth_service.dto.request.LoginRequestDto;
-import by.nikiforova.epic_auth_service.dto.request.TokenRequestDto;
-import by.nikiforova.epic_auth_service.dto.request.UserCreateRequestDto;
-import by.nikiforova.epic_auth_service.dto.request.UserRegistrationRequestDto;
+import by.nikiforova.epic_auth_service.dto.request.*;
 import by.nikiforova.epic_auth_service.dto.response.JwtResponseDto;
 import by.nikiforova.epic_auth_service.dto.response.TokenValidateResponseDto;
-import by.nikiforova.epic_auth_service.dto.response.UserResponseDto;
 import by.nikiforova.epic_auth_service.entity.Credential;
 import by.nikiforova.epic_auth_service.entity.Role;
 import by.nikiforova.epic_auth_service.exception.CredentialAlreadyExistsException;
@@ -27,27 +22,17 @@ public class AuthService {
     private final JwtService jwtService;
     private final CredentialRepository credentialRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserServiceClient userServiceClient;
 
     @Transactional
-    public JwtResponseDto register (UserRegistrationRequestDto requestDto) {
-        if (credentialRepository.existsByLogin(requestDto.login())) {
-            throw new CredentialAlreadyExistsException("Login already exists: " + requestDto.login());
+    public JwtResponseDto register(CredentialsRequestDto request) {
+        if (credentialRepository.existsByLogin(request.login())) {
+            throw new CredentialAlreadyExistsException("Login already exists: " + request.login());
         }
 
-        UserCreateRequestDto request = new UserCreateRequestDto(
-                requestDto.name(),
-                requestDto.surname(),
-                requestDto.email(),
-                requestDto.birthDate()
-        );
-
-        UserResponseDto user = userServiceClient.createUser(request);
-
         Credential credential = Credential.builder()
-                .userId(user.id())
-                .login(requestDto.login())
-                .passwordHash(passwordEncoder.encode(requestDto.password()))
+                .userId(request.userId())
+                .login(request.login())
+                .passwordHash(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
                 .build();
 
@@ -59,7 +44,6 @@ public class AuthService {
                 credential.getUserId(), credential.getRole(), credential.getLogin());
 
         return new JwtResponseDto(accessToken, refreshToken);
-
     }
 
     public JwtResponseDto authenticate(LoginRequestDto loginRequestDto){

@@ -1,13 +1,8 @@
 package by.nikiforova.epic_auth_service.service;
 
-import by.nikiforova.epic_auth_service.client.UserServiceClient;
-import by.nikiforova.epic_auth_service.dto.request.LoginRequestDto;
-import by.nikiforova.epic_auth_service.dto.request.TokenRequestDto;
-import by.nikiforova.epic_auth_service.dto.request.UserCreateRequestDto;
-import by.nikiforova.epic_auth_service.dto.request.UserRegistrationRequestDto;
+import by.nikiforova.epic_auth_service.dto.request.*;
 import by.nikiforova.epic_auth_service.dto.response.JwtResponseDto;
 import by.nikiforova.epic_auth_service.dto.response.TokenValidateResponseDto;
-import by.nikiforova.epic_auth_service.dto.response.UserResponseDto;
 import by.nikiforova.epic_auth_service.entity.Credential;
 import by.nikiforova.epic_auth_service.entity.Role;
 import by.nikiforova.epic_auth_service.exception.CredentialAlreadyExistsException;
@@ -24,8 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,9 +48,6 @@ class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private UserServiceClient userServiceClient;
-
     @InjectMocks
     private AuthService authService;
 
@@ -65,7 +55,7 @@ class AuthServiceTest {
 
     private Credential credential;
 
-    private UserRegistrationRequestDto registrationRequestDto;
+    private CredentialsRequestDto registrationRequestDto;
 
     @BeforeEach
     void setUp() {
@@ -76,32 +66,16 @@ class AuthServiceTest {
                 .passwordHash(PASSWORD_HASH)
                 .role(Role.USER)
                 .build();
-        registrationRequestDto = new UserRegistrationRequestDto(
-                "Liza",
-                "Ivanova",
-                "liza@gmail.com",
-                LocalDate.of(1995, Month.MAY, 10),
+        registrationRequestDto = new CredentialsRequestDto(
+                1L,
                 "liza",
-                "password123"
-        );
+                "password123");
     }
 
     @Test
     @DisplayName("register - success")
     void registerWhenLoginIsUniqueShouldReturnTokens() {
-        UserResponseDto createdUser = new UserResponseDto(
-                1L,
-                "Liza",
-                "Ivanova",
-                "liza@gmail.com",
-                LocalDate.of(1995, Month.MAY, 10),
-                true,
-                null,
-                null
-        );
-
         when(credentialRepository.existsByLogin("liza")).thenReturn(false);
-        when(userServiceClient.createUser(any(UserCreateRequestDto.class))).thenReturn(createdUser);
         when(passwordEncoder.encode("password123")).thenReturn(PASSWORD_HASH);
         when(jwtService.generateAccessToken(1L, Role.USER, "liza")).thenReturn(ACCESS_TOKEN);
         when(jwtService.generateRefreshToken(1L, Role.USER, "liza")).thenReturn(REFRESH_TOKEN);
@@ -111,7 +85,6 @@ class AuthServiceTest {
         assertEquals(ACCESS_TOKEN, result.accessToken());
         assertEquals(REFRESH_TOKEN, result.refreshToken());
 
-        verify(userServiceClient).createUser(any(UserCreateRequestDto.class));
         verify(credentialRepository).save(any(Credential.class));
     }
 
@@ -123,7 +96,6 @@ class AuthServiceTest {
         assertThrows(CredentialAlreadyExistsException.class,
                 () -> authService.register(registrationRequestDto));
 
-        verify(userServiceClient, never()).createUser(any());
         verify(credentialRepository, never()).save(any());
     }
 
