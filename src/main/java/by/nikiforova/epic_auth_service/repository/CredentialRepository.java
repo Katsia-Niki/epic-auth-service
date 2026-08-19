@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface CredentialRepository extends JpaRepository<Credential, Long> {
     Optional<Credential> findByLogin(String login);
     boolean existsByLogin(String login);
+    boolean existsByUserId(Long userId);
+
 }
