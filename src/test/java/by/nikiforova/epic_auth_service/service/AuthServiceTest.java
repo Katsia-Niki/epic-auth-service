@@ -128,6 +128,37 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("register - rollback user when save credentials fails")
+    void registerWhenSaveFailsShouldDeleteUserAndRethrow() {
+        UserResponseDto createdUser = new UserResponseDto(
+                1L,
+                "Liza",
+                "Ivanova",
+                "liza@gmail.com",
+                LocalDate.of(1995, Month.MAY, 10),
+                true,
+                null,
+                null
+        );
+
+        when(credentialRepository.existsByLogin("liza")).thenReturn(false);
+        when(userServiceClient.createUser(any(UserCreateRequestDto.class))).thenReturn(createdUser);
+        when(passwordEncoder.encode("password123")).thenReturn(PASSWORD_HASH);
+        when(credentialRepository.save(any(Credential.class)))
+                .thenThrow(new RuntimeException("DB error"));
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> authService.register(registrationRequestDto)
+        );
+
+        assertEquals("DB error", exception.getMessage());
+
+        verify(userServiceClient).deleteUser(1L);
+        verify(jwtService, never()).generateAccessToken(any(), any(), any());
+    }
+
+    @Test
     @DisplayName("authenticate - success")
     void authenticateWhenValidCredentialsShouldReturnTokens() {
         when(credentialRepository.findByLogin("liza")).thenReturn(Optional.of(credential));
