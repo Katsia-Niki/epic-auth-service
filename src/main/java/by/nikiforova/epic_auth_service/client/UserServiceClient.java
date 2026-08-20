@@ -9,19 +9,38 @@ import org.springframework.web.client.RestClient;
 
 @Component
 public class UserServiceClient {
+
+    private static final String INTERNAL_KEY_HEADER = "X-Internal-Key";
+
     private final RestClient restClient = RestClient.builder().build();
 
-    @Value("${user.service.url}")
-    private String userServiceUrl;
+    private final String userServiceUrl;
+    private final String internalKey;
+
+    public UserServiceClient(@Value("${user.service.url}") String userServiceUrl,
+                             @Value("${app.internal-key}") String internalKey) {
+
+        this.userServiceUrl = userServiceUrl;
+        this.internalKey = internalKey;
+    }
 
     public UserResponseDto createUser(UserCreateRequestDto requestDto) {
 
         return restClient.post()
                 .uri(userServiceUrl + "/api/users")
+                .header(INTERNAL_KEY_HEADER, internalKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestDto)
                 .retrieve()
                 .body(UserResponseDto.class);
 
+    }
+
+    public void deleteUser(Long userId) {
+        restClient.delete()
+                .uri(userServiceUrl + "/api/users/{id}", userId)
+                .header(INTERNAL_KEY_HEADER, internalKey)
+                .retrieve()
+                .toBodilessEntity();
     }
 }

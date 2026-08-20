@@ -44,22 +44,26 @@ public class AuthService {
 
         UserResponseDto user = userServiceClient.createUser(request);
 
-        Credential credential = Credential.builder()
-                .userId(user.id())
-                .login(requestDto.login())
-                .passwordHash(passwordEncoder.encode(requestDto.password()))
-                .role(Role.USER)
-                .build();
+        try {
+            Credential credential = Credential.builder()
+                    .userId(user.id())
+                    .login(requestDto.login())
+                    .passwordHash(passwordEncoder.encode(requestDto.password()))
+                    .role(Role.USER)
+                    .build();
 
-        credentialRepository.save(credential);
+            credentialRepository.save(credential);
 
-        String accessToken = jwtService.generateAccessToken(
-                credential.getUserId(), credential.getRole(), credential.getLogin());
-        String refreshToken = jwtService.generateRefreshToken(
-                credential.getUserId(), credential.getRole(), credential.getLogin());
+            String accessToken = jwtService.generateAccessToken(
+                    credential.getUserId(), credential.getRole(), credential.getLogin());
+            String refreshToken = jwtService.generateRefreshToken(
+                    credential.getUserId(), credential.getRole(), credential.getLogin());
+            return new JwtResponseDto(accessToken, refreshToken);
 
-        return new JwtResponseDto(accessToken, refreshToken);
-
+        } catch (RuntimeException ex) {
+            userServiceClient.deleteUser(user.id());
+            throw ex;
+        }
     }
 
     public JwtResponseDto authenticate(LoginRequestDto loginRequestDto){

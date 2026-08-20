@@ -8,6 +8,7 @@ import by.nikiforova.epic_auth_service.dto.response.TokenValidateResponseDto;
 import by.nikiforova.epic_auth_service.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +25,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<JwtResponseDto> register (@Valid @RequestBody UserRegistrationRequestDto requestDto) {
         JwtResponseDto jwtResponseDto = authService.register(requestDto);
-        return ResponseEntity.ok(jwtResponseDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(jwtResponseDto);
     }
 
     @PostMapping("/login")
